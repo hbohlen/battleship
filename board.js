@@ -1,21 +1,38 @@
 class Board {
-  constructor(parent, rows, cols, topOffset, leftOffset) {
+  constructor(parent) {
     this.parent = parent;
-    this.rows = rows;
-    this.cols = cols;
-    this.topOffset = topOffset;
-    this.leftOffset = leftOffset;
+    this.rows = 10;
+    this.cols = 10;
+    this.topOffset = 30;
+    this.leftOffset = 30; // Set this to a fixed value
+    this.stageWidth = 400; // Set this to a fixed value
     this.grid = this.createGrid();
-    this.ships = [];
+
+    console.log(
+      `Stage starts at pixel (${this.parent.getBoundingClientRect().left}, ${
+        this.parent.getBoundingClientRect().top
+      })`
+    );
+
+    this.debug = true;
+
+    if (this.debug) {
+      console.log("Creating a new Board");
+      console.log(
+        `Board created with ${this.rows} rows and ${this.cols} columns`
+      );
+    }
   }
 
   createGrid() {
     let grid = [];
     // Calculate the size of each cell in pixels
-    let cellWidth = (this.parent.offsetWidth - this.leftOffset) / this.cols;
-    let cellHeight = (this.parent.offsetHeight - this.topOffset) / this.rows;
+    let cellWidth = ((this.stageWidth - this.leftOffset) / this.cols) * 0.98; // Reduce cell width by 10%
+    let cellHeight = ((300 - this.topOffset) / this.rows) * 0.99; // Assuming the stage height is 300
 
-    console.log(`Cell width: ${cellWidth}px, Cell height: ${cellHeight}px`);
+    if (this.debug) {
+      console.log(`Cell width: ${cellWidth}px, Cell height: ${cellHeight}px`);
+    }
 
     for (let r = 0; r < this.rows; r++) {
       let row = [];
@@ -33,62 +50,10 @@ class Board {
       }
       grid.push(row);
     }
+
+    if (this.debug) {
+      console.log("Grid created");
+    }
     return grid;
-  }
-
-  addShip(ship) {
-    this.ships.push(ship); // Add the ship object to the array
-    this.parent.appendChild(ship.element);
-  }
-
-  getCell(row, col) {
-    return this.grid[row][col];
-  }
-
-  getAllShips() {
-    return this.ships;
-  }
-
-  getShipAtCell(row, col) {
-    return this.ships.find((ship) => ship.row === row && ship.col === col);
-  }
-
-  clearBoard() {
-    this.ships.forEach((ship) => ship.element.remove());
-    this.ships = [];
-  }
-
-  resetBoard() {
-    this.clearBoard();
-    this.grid = this.createGrid();
-  }
-
-  getEmptyCells() {
-    return this.grid
-      .flat()
-      .filter((cell) => !this.getShipAtCell(cell.row, cell.col));
-  }
-
-  getOccupiedCells() {
-    return this.grid
-      .flat()
-      .filter((cell) => this.getShipAtCell(cell.row, cell.col));
-  }
-
-  isValidPosition(row, col) {
-    return row >= 0 && row < this.rows && col >= 0 && col < this.cols;
-  }
-
-  getAdjacentCells(row, col) {
-    const adjacentOffsets = [
-      { row: -1, col: 0 },
-      { row: 1, col: 0 },
-      { row: 0, col: -1 },
-      { row: 0, col: 1 },
-    ];
-
-    return adjacentOffsets
-      .map((offset) => ({ row: row + offset.row, col: col + offset.col }))
-      .filter(({ row, col }) => this.isValidPosition(row, col));
   }
 }
