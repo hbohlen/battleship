@@ -41,4 +41,17 @@ class Cell {
       if (this.debug) console.log("Mouseout event triggered");
     });
   }
+
+  getBounds() {
+    let bounds = this.element.getBoundingClientRect();
+    let gridContainerBounds =
+      this.element.parentElement.getBoundingClientRect();
+    let relativeBounds = {
+      top: bounds.top - gridContainerBounds.top,
+      left: bounds.left - gridContainerBounds.left,
+      bottom: bounds.bottom - gridContainerBounds.top,
+      right: bounds.right - gridContainerBounds.left,
+    };
+    return relativeBounds;
+  }
 }

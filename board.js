@@ -52,6 +52,14 @@ class Board {
       grid.push(row);
     }
 
+    this.grid = grid;
+
+    let ship = new Ship(this.gridContainer, 4); // Create a ship with a size of 3
+    ship.positionInCell(this.grid[0][0], this.grid[3][0]);
+
+    let position = ship.getPosition();
+    console.log(position); // Log the position of the ship
+
     if (this.debug) {
       console.log("Grid created");
     }
