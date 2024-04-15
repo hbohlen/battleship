@@ -1,15 +1,10 @@
+let stage;
+
 document.addEventListener("DOMContentLoaded", (event) => {
-  // Create a new div element
-  const gridContainer = document.createElement("div");
+  stage = document.getElementById("stage");
 
-  // Add the 'grid-container' class to the div
-  gridContainer.classList.add("grid-container");
-
-  // Append the div to the body
-  document.body.appendChild(gridContainer);
-
-  // Now you can use gridContainer as the parent for the board
-  const board = new Board(gridContainer);
+  // Now you can use stage as the parent for the board
+  const board = new Board(stage);
   console.log(board);
 
   // Create a new Game instance with the board
