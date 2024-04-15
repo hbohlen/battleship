@@ -34,5 +34,11 @@ class Cell {
       this.element.style.backgroundColor = "rgba(255, 0, 0, 0.5)"; // Change color to red on hover
       if (this.debug) console.log("Mouseover event triggered");
     });
+
+    // Add mouseout event listener
+    this.element.addEventListener("mouseout", () => {
+      this.element.style.backgroundColor = ""; // Reset color when mouse leaves
+      if (this.debug) console.log("Mouseout event triggered");
+    });
   }
 }
