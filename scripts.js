@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
   stage = document.getElementById("stage");
 
   // Now you can use stage as the parent for the board
-  const board = new Board(stage);
+  const board = new Board();
   console.log(board);
 
   // Create a new Game instance with the board

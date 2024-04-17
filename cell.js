@@ -5,14 +5,23 @@ class Cell {
     this.element = document.createElement("div");
     this.element.className = "cell";
 
-    this.element.style.width = "10%";
-    this.element.style.height = "10%";
+    // Example calculation for cell size (adjust the offset values as per your actual setup)
+    const availableWidth = 400 - 30; // 400px is the width of the stage, 30px is the left offset
+    const availableHeight = 300 - 30; // 300px is the height of the stage, 30px is the top offset
+
+    const cellWidth = availableWidth / 10; // Divide by the number of cells horizontally
+    const cellHeight = availableHeight / 10; // Divide by the number of cells vertically
+
+    this.element.style.width = `${cellWidth}px`;
+    this.element.style.height = `${cellHeight}px`;
     this.element.style.position = "absolute";
     this.element.style.border = "1px dotted white";
     this.element.style.boxSizing = "border-box";
     this.element.style.top = `${row * 10}%`;
     this.element.style.left = `${col * 10}%`;
     gridContainer.appendChild(this.element); // Append to gridContainer instead of stage
+
+    this.highlighted = false;
 
     this.debug = true;
 
@@ -28,17 +37,28 @@ class Cell {
     }
   }
 
+  highlight() {
+    this.highlighted = true; // Add this line
+    this.element.style.backgroundColor = "green";
+  }
+
   addEventListeners() {
-    // Add mouseover event listener
+    // Modify these event listeners
     this.element.addEventListener("mouseover", () => {
-      this.element.style.backgroundColor = "rgba(255, 0, 0, 0.5)"; // Change color to red on hover
-      if (this.debug) console.log("Mouseover event triggered");
+      if (!this.highlighted) {
+        // Add this line
+        this.element.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
+      }
+    });
+    this.element.addEventListener("click", () => {
+      console.log(`Cell at row ${this.row}, col ${this.col} was clicked`);
     });
 
-    // Add mouseout event listener
     this.element.addEventListener("mouseout", () => {
-      this.element.style.backgroundColor = ""; // Reset color when mouse leaves
-      if (this.debug) console.log("Mouseout event triggered");
+      if (!this.highlighted) {
+        // Add this line
+        this.element.style.backgroundColor = "";
+      }
     });
   }
 
