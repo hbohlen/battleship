@@ -1,5 +1,6 @@
 class Board {
-  constructor() {
+  constructor(stage) {
+    this.stage = stage;
     this.rows = 10;
     this.cols = 10;
     this.topOffset = 30;
@@ -15,9 +16,9 @@ class Board {
     gridContainer.style.position = "absolute";
     gridContainer.style.top = `${this.topOffset}px`;
     gridContainer.style.left = `${this.leftOffset}px`;
-    gridContainer.style.width = `calc(100% - ${this.leftOffset}px)`; // Subtract the left offset from the width
+    gridContainer.style.width = `calc(100% - ${this.leftOffset}px)`;
     gridContainer.style.height = `calc(100% - ${this.topOffset}px)`;
-    stage.appendChild(gridContainer);
+    this.stage.appendChild(gridContainer); // Use this.stage to append the gridContainer
     return gridContainer;
   }
   createGrid() {
@@ -31,13 +32,5 @@ class Board {
       grid.push(row);
     }
     return grid;
-  }
-
-  highlightPotentialStartPositions(shipSize) {
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c <= this.cols - shipSize; c++) {
-        this.grid[r][c].highlight();
-      }
-    }
   }
 }
