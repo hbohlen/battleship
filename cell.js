@@ -23,18 +23,8 @@ class Cell {
 
     this.highlighted = false;
 
-    this.debug = true;
-
     // Add event listeners
     this.addEventListeners();
-
-    // Debug
-    if (this.debug) {
-      console.log("Creating a new Cell");
-      console.log(
-        `Cell created at position (${this.row}, ${this.col}) with size (${this.element.style.width}, ${this.element.style.height})`
-      );
-    }
   }
 
   highlight() {
