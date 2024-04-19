@@ -1,8 +1,9 @@
 class Game {
   constructor(output) {
     this.output = output;
-    this.stage = document.getElementById("stage");
-    this.board = new Board(this.stage);
+    this.canvas = document.getElementById("stage");
+    this.ctx = this.canvas.getContext("2d");
+    this.board = new Board(this.canvas);
     this.init();
   }
 
@@ -14,7 +15,8 @@ class Game {
       "Patrol",
       2,
       "vertical",
-      this.board.gridContainer
+      this.board.gridContainer,
+      this.ctx
     );
     this.placeShipRandomly(patrolShip, ships);
 
@@ -23,7 +25,8 @@ class Game {
       "Battleship",
       4,
       "horizontal",
-      this.board.gridContainer
+      this.board.gridContainer,
+      this.ctx
     );
     this.placeShipRandomly(battleship, ships);
 
@@ -32,7 +35,8 @@ class Game {
       "Destroyer",
       3,
       "vertical",
-      this.board.gridContainer
+      this.board.gridContainer,
+      this.ctx
     );
     this.placeShipRandomly(destroyer, ships);
   }

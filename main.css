@@ -87,3 +87,11 @@ button:active {
   width: 400px;
   height: 300px;
 }
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* This ensures items start at the top */
+  height: 100vh; /* Use the full height of the viewport */
+  flex-direction: column; /* Stack items vertically */
+  margin: 0; /* Remove default margin */
+}
