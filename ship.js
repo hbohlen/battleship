@@ -1,35 +1,29 @@
 class Ship {
-  constructor(type, size, direction, gridContainer) {
-    this.type = type; // Type of the ship (e.g., "Destroyer")
+  constructor(name, size, direction, gridContainer) {
+    this.name = name; // Type of the ship (e.g., "Destroyer")
     this.size = size; // Size of the ship (e.g., 3 cells)
     this.direction = direction; // "horizontal" or "vertical"
     this.gridContainer = gridContainer; // The container to which the ship will be attached
     this.occupiedCells = []; // Array to store positions (row, col) the ship occupies
+    this.hits = 0;
 
+    console.log(`Creating ship: ${this.name}`); // Log the name when creating the ship
     this.createElement();
   }
 
   createElement() {
-    this.element = document.createElement("div");
-    this.element.className = "ship " + this.type.toLowerCase(); // Use type for specific styling
-
-    // Assign different colors based on ship type
-    switch (this.type) {
-      case "Patrol":
-        this.element.style.backgroundColor = "blue";
-        break;
-      case "Battleship":
-        this.element.style.backgroundColor = "green";
-        break;
-      case "Destroyer":
-        this.element.style.backgroundColor = "red";
-        break;
-      default:
-        this.element.style.backgroundColor = "black";
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element);
     }
+    this.element = document.createElement("div");
+    this.element.className = "ship " + this.name.toLowerCase();
+    // Set background image based on ship type and direction
+    let imageName =
+      this.name.toLowerCase() + (this.direction === "vertical" ? "_v" : "_h");
+    this.element.style.backgroundImage = `url('images/${imageName}.png')`;
 
+    console.log(`Element created for ${this.name} with image ${imageName}`);
     this.gridContainer.appendChild(this.element);
-    // Additional logic to position and style the ship based on its size and direction
   }
 
   setPosition(row, col) {
@@ -52,11 +46,17 @@ class Ship {
     }
     this.element.style.top = `${row * 10}%`; // Position from top
     this.element.style.left = `${col * 10}%`; // Position from left
+    console.log(
+      `Position set for ${this.name} at (${row}, ${col}) with occupied cells:`,
+      this.occupiedCells
+    );
   }
 
   isCellOccupied(row, col) {
-    return this.occupiedCells.some(
+    const occupied = this.occupiedCells.some(
       (cell) => cell.row === row && cell.col === col
     );
+
+    return occupied;
   }
 }

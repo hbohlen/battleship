@@ -4,8 +4,8 @@ class Cell {
     this.col = col;
     this.element = document.createElement("div");
     this.element.className = "cell";
+    this.clicked = false;
 
-    // Example calculation for cell size (adjust the offset values as per your actual setup)
     const availableWidth = 400 - 30; // 400px is the width of the stage, 30px is the left offset
     const availableHeight = 300 - 30; // 300px is the height of the stage, 30px is the top offset
 
@@ -19,7 +19,7 @@ class Cell {
     this.element.style.boxSizing = "border-box";
     this.element.style.top = `${row * 10}%`;
     this.element.style.left = `${col * 10}%`;
-    gridContainer.appendChild(this.element); // Append to gridContainer instead of stage
+    gridContainer.appendChild(this.element); // Append to gridContainer
 
     this.highlighted = false;
 
@@ -28,26 +28,44 @@ class Cell {
   }
 
   highlight() {
-    this.highlighted = true; // Add this line
+    this.highlighted = true;
     this.element.style.backgroundColor = "green";
   }
 
   addEventListeners() {
-    // Modify these event listeners
     this.element.addEventListener("mouseover", () => {
       if (!this.highlighted) {
-        // Add this line
-        this.element.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
+        if (this.clicked) {
+          const hit = game.checkForHit(this.row, this.col);
+          if (hit) {
+            this.element.style.backgroundColor = "transparent";
+          } else {
+            this.element.style.backgroundColor = "transparent";
+          }
+        } else {
+          this.element.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
+        }
       }
     });
     this.element.addEventListener("click", () => {
-      console.log(`Cell at row ${this.row}, col ${this.col} was clicked`);
+      if (this.clicked) return; // Ignore clicks if the cell has already been clicked
+      this.clicked = true; // Set clicked to true when the cell is clicked
+      const hit = game.checkForHit(this.row, this.col);
+      if (hit) {
+        const hitMarker = document.createElement("div");
+        hitMarker.className = "hit-marker";
+        this.element.appendChild(hitMarker);
+      } else {
+        const missCircle = document.createElement("div");
+        missCircle.className = "miss-circle";
+        this.element.appendChild(missCircle);
+      }
     });
 
     this.element.addEventListener("mouseout", () => {
-      if (!this.highlighted) {
-        // Add this line
-        this.element.style.backgroundColor = "";
+      if (!this.highlighted && !this.clicked) {
+        // Check if the cell has not been clicked
+        this.element.style.backgroundColor = ""; // Only reset if not clicked
       }
     });
   }
