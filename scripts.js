@@ -1,90 +1,58 @@
 document.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("stage");
+  const gridCanvas = document.getElementById("gridCanvas"); // Grab the gridCanvas element
   const ctx = canvas.getContext("2d");
+  const gridCtx = gridCanvas.getContext("2d"); // Get the context for gridCanvas
   const rows = 10; // Example row count
   const cols = 10; // Example column count
 
-  const offsetX = 37; // Adjust as needed to align with the background image
-  const offsetY = 30; // Adjust as needed to align with the background image
-  const cellWidth = (canvas.width - offsetX) / cols; // Adjusted for 10% of the remaining space
-  const cellHeight = (canvas.height - offsetY) / rows; // Adjusted for 10% of the remaining space
-
-  // Function to draw grid
   function drawGrid() {
-    ctx.strokeStyle = "#FFFFFF"; // Set the line color to white
-    ctx.setLineDash([5, 5]); // Create dotted lines
+    const numRows = 10;
+    const numCols = 10;
+    const cellWidth = gridCanvas.width / numCols;
+    const cellHeight = gridCanvas.height / numRows;
 
-    // Draw vertical lines for columns, starting from the second column
-    for (let i = 1; i < cols; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * cellWidth + offsetX, offsetY + cellHeight);
-      ctx.lineTo(i * cellWidth + offsetX, canvas.height - offsetY);
-      ctx.stroke();
+    gridCtx.strokeStyle = "#FFFFFF"; // Set the line color to white
+    gridCtx.lineWidth = 0.5; // Set the line width to 0.5 for finer lines
+    gridCtx.setLineDash([1, 1]); // Adjust the dash pattern for a more fine dotted line
+    for (let i = 0; i < numCols; i++) {
+      for (let j = 0; j < numRows; j++) {
+        gridCtx.strokeRect(
+          i * cellWidth,
+          j * cellHeight,
+          cellWidth,
+          cellHeight
+        );
+      }
     }
-
-    // Draw horizontal lines for rows, starting from the second row
-    for (let j = 1; j < rows; j++) {
-      ctx.beginPath();
-      ctx.moveTo(offsetX + cellWidth, j * cellHeight + offsetY);
-      ctx.lineTo(canvas.width - offsetX, j * cellHeight + offsetY);
-      ctx.stroke();
-    }
-
-    ctx.setLineDash([]); // Reset the dash pattern to solid
+    gridCtx.setLineDash([]); // Reset the dash pattern to solid
   }
 
-  // Draw the grid over the background
+  // Call drawGrid function after defining it
   drawGrid();
 
-  let lastHighlightedCell = null;
+  function highlightCell(event) {
+    // Clear the canvas and redraw the grid to remove previous highlights
+    gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+    drawGrid();
 
-  canvas.addEventListener("mousemove", function (event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left; // x position within the canvas
-    const y = event.clientY - rect.top; // y position within the canvas
+    const rect = gridCanvas.getBoundingClientRect();
+    const scaleX = gridCanvas.width / rect.width; // Ratio of actual width to displayed width
+    const scaleY = gridCanvas.height / rect.height; // Ratio of actual height to displayed height
+    const mouseX = (event.clientX - rect.left) * scaleX; // Adjusted X coordinate
+    const mouseY = (event.clientY - rect.top) * scaleY; // Adjusted Y coordinate
+    const cellX = Math.floor(mouseX / (gridCanvas.width / cols));
+    const cellY = Math.floor(mouseY / (gridCanvas.height / rows));
 
-    highlightCell(x, y);
-  });
-
-  function highlightCell(x, y) {
-    const col = Math.floor((x - offsetX - cellWidth) / cellWidth);
-    const row = Math.floor((y - offsetY - cellHeight) / cellHeight);
-
-    // Check if the cell is within the usable range
-    if (col < 0 || row < 0) {
-      return;
-    }
-
-    lastHighlightedCell = { row, col };
-
-    // Clear previous highlight by redrawing the grid and then highlight the new cell
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-    drawGrid(); // Redraw the grid
-
-    // Highlight the new cell
-    ctx.fillStyle = "rgba(255, 0, 0, 0.5)"; // Semi-transparent red
-    ctx.fillRect(
-      col * cellWidth + offsetX,
-      row * cellHeight + offsetY,
-      cellWidth,
-      cellHeight
+    // Highlight the cell
+    gridCtx.fillStyle = "red";
+    gridCtx.fillRect(
+      cellX * (gridCanvas.width / cols),
+      cellY * (gridCanvas.height / rows),
+      gridCanvas.width / cols,
+      gridCanvas.height / rows
     );
   }
 
-  canvas.addEventListener("click", function (event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left - offsetX - cellWidth; // Adjusted x position
-    const y = event.clientY - rect.top - offsetY - cellHeight; // Adjusted y position
-
-    // Ensure clicks within the grid boundaries are processed
-    if (x >= 0 && y >= 0) {
-      const col = Math.floor(x / cellWidth);
-      const row = Math.floor(y / cellHeight);
-
-      // Ensure the calculated row and col are within the grid
-      if (col >= 0 && col < cols && row >= 0 && row < rows) {
-        console.log(`Grid coordinates: Row ${row}, Col ${col}`);
-      }
-    }
-  });
+  gridCanvas.addEventListener("mousemove", highlightCell);
 });
