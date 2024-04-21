@@ -71,4 +71,15 @@ div#canvasContainer {
   width: 360px; /* Adjust based on your preference */
   height: 270px; /* Adjust based on your preference */
   border: 2px solid #000; /* Outline the grid container */
+  z-index: 2;
+}
+
+#shipsCanvas {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 360px; /* Adjust based on your preference */
+  height: 270px; /* Adjust based on your preference */
+  border: 2px solid #000; /* Outline the grid container */
+  z-index: 1;
 }
