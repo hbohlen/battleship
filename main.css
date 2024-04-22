@@ -83,3 +83,13 @@ div#canvasContainer {
   border: 2px solid #000; /* Outline the grid container */
   z-index: 1;
 }
+#explosionCanvas {
+  position: absolute;
+  pointer-events: none;
+  right: 0;
+  bottom: 0;
+  width: 360px; /* Adjust based on your preference */
+  height: 270px; /* Adjust based on your preference */
+  border: 2px solid #000; /* Outline the grid container */
+  z-index: 3;
+}

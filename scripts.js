@@ -1,10 +1,61 @@
 import { Ship } from "./ship.js";
 
+// Helper function to check if a ship can be placed
+function canPlaceShip(ship, ships, rows, cols) {
+  for (let i = 0; i < ship.length; i++) {
+    const posX =
+      ship.orientation === "horizontal" ? ship.startX + i : ship.startX;
+    const posY =
+      ship.orientation === "vertical" ? ship.startY + i : ship.startY;
+
+    // Check bounds
+    if (posX >= cols || posY >= rows) return false;
+
+    // Check overlap
+    for (const otherShip of ships) {
+      if (otherShip === ship) continue;
+      for (let j = 0; j < otherShip.length; j++) {
+        const otherPosX =
+          otherShip.orientation === "horizontal"
+            ? otherShip.startX + j
+            : otherShip.startX;
+        const otherPosY =
+          otherShip.orientation === "vertical"
+            ? otherShip.startY + j
+            : otherShip.startY;
+
+        if (posX === otherPosX && posY === otherPosY) return false;
+      }
+    }
+  }
+  return true;
+}
+
+// Function to randomly place all ships with random orientations
+function placeShipsRandomly(ships, rows, cols) {
+  ships.forEach((ship) => {
+    let placed = false;
+    while (!placed) {
+      const randomX = Math.floor(Math.random() * cols);
+      const randomY = Math.floor(Math.random() * rows);
+      const randomOrientation = Math.random() > 0.5 ? "horizontal" : "vertical"; // Randomly set orientation
+
+      ship.startX = randomX;
+      ship.startY = randomY;
+      ship.orientation = randomOrientation;
+
+      if (canPlaceShip(ship, ships, rows, cols)) {
+        placed = true;
+      }
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const ships = [
-    new Ship("Patrol", 2, "vertical", 0, 0),
-    new Ship("Destroyer", 3, "horizontal", 5, 0),
-    new Ship("Battleship", 4, "vertical", 2, 3),
+    new Ship("Patrol", 2),
+    new Ship("Destroyer", 3),
+    new Ship("Battleship", 4),
     // Add more ships as needed
   ];
   const canvas = document.getElementById("stage");
@@ -13,8 +64,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const gridCtx = gridCanvas.getContext("2d"); // Get the context for gridCanvas
   const shipsCanvas = document.getElementById("shipsCanvas");
   const shipsCtx = shipsCanvas.getContext("2d");
+  const explosionCanvas = document.getElementById("explosionCanvas");
+  const explosionCtx = explosionCanvas.getContext("2d");
+
   const rows = 10; // Example row count
   const cols = 10; // Example column count
+  const misses = [];
+  const hits = [];
+
+  placeShipsRandomly(ships, rows, cols);
 
   function drawGrid() {
     const numRows = 10;
@@ -35,6 +93,9 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
     }
+    // Redraw hits and misses
+    hits.forEach((hit) => drawHitMarker(hit.x, hit.y));
+    misses.forEach((miss) => drawMissMarker(miss.x, miss.y));
     gridCtx.setLineDash([]); // Reset the dash pattern to solid
   }
 
@@ -42,78 +103,129 @@ document.addEventListener("DOMContentLoaded", () => {
   drawGrid();
 
   function highlightCell(event) {
-    // Clear the canvas and redraw the grid to remove previous highlights
     gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-    drawGrid();
-    drawShips(); // Redraw ships after the grid is redrawn
+    drawGrid(); // Redraw grid to clear previous highlights
+    drawShips(); // Ensure ships are redrawn if you are showing them
 
     const rect = gridCanvas.getBoundingClientRect();
-    const scaleX = gridCanvas.width / rect.width; // Ratio of actual width to displayed width
-    const scaleY = gridCanvas.height / rect.height; // Ratio of actual height to displayed height
-    const mouseX = (event.clientX - rect.left) * scaleX; // Adjusted X coordinate
-    const mouseY = (event.clientY - rect.top) * scaleY; // Adjusted Y coordinate
+    const scaleX = gridCanvas.width / rect.width;
+    const scaleY = gridCanvas.height / rect.height;
+    const mouseX = (event.clientX - rect.left) * scaleX;
+    const mouseY = (event.clientY - rect.top) * scaleY;
     const cellX = Math.floor(mouseX / (gridCanvas.width / cols));
     const cellY = Math.floor(mouseY / (gridCanvas.height / rows));
 
-    // Highlight the cell
-    gridCtx.fillStyle = "red";
-    gridCtx.fillRect(
-      cellX * (gridCanvas.width / cols),
-      cellY * (gridCanvas.height / rows),
-      gridCanvas.width / cols,
-      gridCanvas.height / rows
-    );
+    const centerX =
+      cellX * (gridCanvas.width / cols) + gridCanvas.width / cols / 2;
+    const centerY =
+      cellY * (gridCanvas.height / rows) + gridCanvas.height / rows / 2;
+    const radius = gridCanvas.width / cols / 4; // Reticule radius
+
+    // Draw circle for reticule
+    gridCtx.strokeStyle = "red";
+    gridCtx.beginPath();
+    gridCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    gridCtx.stroke();
+
+    // Draw crosshairs
+    gridCtx.beginPath();
+    gridCtx.moveTo(centerX - radius, centerY);
+    gridCtx.lineTo(centerX + radius, centerY);
+    gridCtx.moveTo(centerX, centerY - radius);
+    gridCtx.lineTo(centerX, centerY + radius);
+    gridCtx.stroke();
   }
 
-  gridCanvas.addEventListener("mousemove", highlightCell);
+  gridCanvas.addEventListener("mousemove", function (event) {
+    if (!isAnimating) {
+      // Only highlight if no animation is ongoing
+      highlightCell(event);
+    }
+  });
 
   gridCanvas.addEventListener("click", function (event) {
+    if (isAnimating) {
+      console.log("Animation in progress, please wait.");
+      return;
+    }
     const rect = gridCanvas.getBoundingClientRect();
-    const scaleX = gridCanvas.width / rect.width; // Ratio of actual width to displayed width
-    const scaleY = gridCanvas.height / rect.height; // Ratio of actual height to displayed height
-    const mouseX = (event.clientX - rect.left) * scaleX; // Adjusted X coordinate
-    const mouseY = (event.clientY - rect.top) * scaleY; // Adjusted Y coordinate
+    const scaleX = gridCanvas.width / rect.width;
+    const scaleY = gridCanvas.height / rect.height;
+    const mouseX = (event.clientX - rect.left) * scaleX;
+    const mouseY = (event.clientY - rect.top) * scaleY;
     const cellX = Math.floor(mouseX / (gridCanvas.width / cols));
     const cellY = Math.floor(mouseY / (gridCanvas.height / rows));
 
-    // Convert cellX from number to letter for columns A-J
-    const columnLabel = String.fromCharCode(65 + cellX); // Convert 0-9 to A-J
-    console.log(`Clicked cell at: ${columnLabel}, ${cellY + 1}`); // Adjust cellY to 1-10
+    if (
+      misses.some((m) => m.x === cellX && m.y === cellY) ||
+      hits.some((h) => h.x === cellX && h.y === cellY)
+    ) {
+      console.log("Cell already clicked");
+      return;
+    }
 
-    const hitShip = ships.find((ship) => {
-      const relativePosition =
-        ship.orientation === "horizontal"
-          ? cellX - ship.startX
-          : cellY - ship.startY;
-      return (
-        relativePosition >= 0 &&
-        relativePosition < ship.length &&
-        !ship.isPositionHit(relativePosition)
-      );
-    });
+    let isHit = false;
 
-    if (hitShip) {
-      const relativePosition =
-        hitShip.orientation === "horizontal"
-          ? cellX - hitShip.startX
-          : cellY - hitShip.startY;
-      console.log(`Hit detected on ${hitShip.name}`);
-      hitShip.hit(relativePosition); // Mark the hit with the relative position
-      if (hitShip.isSunk()) {
-        console.log(`${hitShip.name} is sunk!`);
-        checkAllShipsSunk();
+    for (const ship of ships) {
+      for (let i = 0; i < ship.length; i++) {
+        const shipX =
+          ship.orientation === "horizontal" ? ship.startX + i : ship.startX;
+        const shipY =
+          ship.orientation === "vertical" ? ship.startY + i : ship.startY;
+
+        if (cellX === shipX && cellY === shipY) {
+          console.log(`Hit detected on ${ship.name}`);
+          ship.hit(i); // Assuming ship.hit marks the part of the ship hit
+          hits.push({ x: cellX, y: cellY });
+          animateHit(cellX, cellY, function () {
+            drawHitMarker(cellX, cellY);
+          });
+          isHit = true;
+          break;
+        }
       }
-      // Calculate the center of the hit cell for the animation
-      const hitX =
-        cellX * (gridCanvas.width / cols) + gridCanvas.width / cols / 2;
-      const hitY =
-        cellY * (gridCanvas.height / rows) + gridCanvas.height / rows / 2;
-      animateHit(hitX, hitY); // Call animateHit with the center coordinates of the hit cell
-    } else {
-      console.log("Miss or already hit");
-      // Handle miss logic or already hit cell
+      if (isHit) {
+        if (ship.isSunk()) {
+          console.log(`${ship.name} is sunk!`);
+          checkAllShipsSunk();
+        }
+        break;
+      }
+    }
+
+    if (!isHit) {
+      console.log("Miss");
+      misses.push({ x: cellX, y: cellY });
+      drawMissMarker(cellX, cellY);
     }
   });
+
+  function drawHitMarker(cellX, cellY) {
+    const centerX =
+      cellX * (gridCanvas.width / cols) + gridCanvas.width / cols / 2;
+    const centerY =
+      cellY * (gridCanvas.height / rows) + gridCanvas.height / rows / 2;
+    const radius = gridCanvas.width / cols / 10;
+
+    gridCtx.fillStyle = "red";
+    gridCtx.beginPath();
+    gridCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    gridCtx.fill();
+  }
+
+  // Function to draw a white marker on a miss
+  function drawMissMarker(cellX, cellY) {
+    const centerX =
+      cellX * (gridCanvas.width / cols) + gridCanvas.width / cols / 2;
+    const centerY =
+      cellY * (gridCanvas.height / rows) + gridCanvas.height / rows / 2;
+    const radius = gridCanvas.width / cols / 10; // Adjust radius size as needed
+
+    gridCtx.fillStyle = "white";
+    gridCtx.beginPath();
+    gridCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    gridCtx.fill();
+  }
 
   function checkAllShipsSunk() {
     const allSunk = ships.every((ship) => ship.isSunk());
@@ -169,31 +281,46 @@ document.addEventListener("DOMContentLoaded", () => {
   drawShips();
 
   const explosionImage = new Image();
+  explosionImage.onload = function () {
+    console.log("Explosion image successfully loaded.");
+  };
+  explosionImage.onerror = function () {
+    console.log("Error loading the explosion image.");
+  };
   explosionImage.src = "./images/explosion.png";
 
-  function animateHit(x, y) {
-    let size = 0; // Initial size of the explosion
-    const maxSize = 40; // Increased maximum size of the explosion
-    const animationStep = 5; // How much the explosion grows each frame
-    const shipCellWidth = gridCanvas.width / cols; // Width of a cell
-    const shipCellHeight = gridCanvas.height / rows; // Height of a cell
+  let isAnimating = false;
+
+  function animateHit(x, y, callback) {
+    isAnimating = true;
+    let size = 0;
+    const maxSize = 40;
+    const animationStep = 5;
 
     function draw() {
-      gridCtx.save(); // Save the current state before clipping
-      gridCtx.clearRect(x - size / 2, y - size / 2, size, size);
-      gridCtx.beginPath();
-      gridCtx.arc(x, y, size / 2, 0, 2 * Math.PI);
-      gridCtx.closePath();
-      gridCtx.clip();
-      gridCtx.drawImage(explosionImage, x - size / 2, y - size / 2, size, size);
-      gridCtx.restore(); // Restore the context to remove the clipping effect for future drawings
-      // Increase the size for the next frame
-      size += animationStep;
-      if (size > maxSize) size = maxSize;
+      explosionCtx.clearRect(
+        0,
+        0,
+        explosionCanvas.width,
+        explosionCanvas.height
+      ); // Clear the canvas on each frame
+      explosionCtx.beginPath();
+      explosionCtx.arc(x, y, size / 2, 0, 2 * Math.PI);
+      explosionCtx.closePath();
+      explosionCtx.drawImage(
+        explosionImage,
+        x - size / 2,
+        y - size / 2,
+        size,
+        size
+      );
 
-      // Continue the animation if the maximum size hasn't been reached
+      size += animationStep;
       if (size < maxSize) {
         requestAnimationFrame(draw);
+      } else {
+        isAnimating = false;
+        callback(); // Execute the callback
       }
     }
 
